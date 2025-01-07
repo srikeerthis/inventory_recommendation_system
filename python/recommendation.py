@@ -1,12 +1,14 @@
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 from imblearn.over_sampling import SMOTE
 import joblib
-import numpy as np
 
 # Step 1: Dataset
 data = {
@@ -67,12 +69,17 @@ data = {
     ]
 }
 
+# Create a DataFrame
 df = pd.DataFrame(data)
 
 # Step 2: Encode Categorical Features
-label_encoder = LabelEncoder()
-df["category_encoded"] = label_encoder.fit_transform(df["category"])
-df["status_encoded"] = label_encoder.fit_transform(df["status"])
+label_encoder_category = LabelEncoder()
+label_encoder_status = LabelEncoder()
+label_encoder_recommendation = LabelEncoder()
+
+df["category_encoded"] = label_encoder_category.fit_transform(df["category"])
+df["status_encoded"] = label_encoder_status.fit_transform(df["status"])
+y = label_encoder_recommendation.fit_transform(df["recommendation"])
 
 # Step 3: Vectorize Text Descriptions
 vectorizer = TfidfVectorizer(stop_words="english")
@@ -86,24 +93,10 @@ X = pd.concat(
     ],
     axis=1,
 )
-y = label_encoder.fit_transform(df["recommendation"])
 
-# Step 5: Apply SMOTE
-
-from collections import Counter
-
-# Check class distribution
-print("Original class distribution:", Counter(y))
-
-# Apply SMOTE with adjusted k_neighbors
-smote = SMOTE(random_state=42, k_neighbors=2)  # Ensure k_neighbors <= smallest class size
+# Step 5: Handle Class Imbalance with SMOTE
+smote = SMOTE(random_state=42, k_neighbors=2)
 X_resampled, y_resampled = smote.fit_resample(X, y)
-
-# Check new class distribution after resampling
-print("Resampled class distribution:", Counter(y_resampled))
-
-# smote = SMOTE(random_state=42)
-# X_resampled, y_resampled = smote.fit_resample(X, y)
 
 # Step 6: Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(
@@ -137,8 +130,7 @@ best_model.fit(X_train, y_train)
 
 # Step 9: Evaluate the Model
 y_pred = best_model.predict(X_test)
-unique_classes = np.unique(y_test)
-target_names = [label_encoder.inverse_transform([cls])[0] for cls in unique_classes]
+target_names = label_encoder_recommendation.inverse_transform(range(len(label_encoder_recommendation.classes_)))
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=target_names, zero_division=1))
 
@@ -146,9 +138,11 @@ print(classification_report(y_test, y_pred, target_names=target_names, zero_divi
 cv_scores = cross_val_score(best_model, X_resampled, y_resampled, cv=5, scoring='accuracy')
 print(f"K-Fold Cross Validation Accuracy: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
 
-# Step 11: Save the Model and Supporting Objects
+# Step 11: Save the Model and Preprocessing Tools
 joblib.dump(best_model, "inventory_recommender.pkl")
 joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
-joblib.dump(label_encoder, "label_encoder.pkl")
+joblib.dump(label_encoder_category, "label_encoder_category.pkl")
+joblib.dump(label_encoder_status, "label_encoder_status.pkl")
+joblib.dump(label_encoder_recommendation, "label_encoder_recommendation.pkl")
 
-print("Model, vectorizer, and label encoder saved.")
+print("Model, vectorizer, and label encoders saved.")

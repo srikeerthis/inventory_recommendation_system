@@ -5,11 +5,11 @@ import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Load the trained model and preprocessing tools
-model = joblib.load("inventory_recommender.pkl")
-vectorizer = joblib.load("tfidf_vectorizer.pkl")
-label_encoder_category = joblib.load("label_encoder_category.pkl")
-label_encoder_status = joblib.load("label_encoder_status.pkl")
-label_encoder_recommendation = joblib.load("label_encoder_recommendation.pkl")
+model = joblib.load("models/inventory_recommender.pkl")
+vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
+label_encoder_category = joblib.load("models/label_encoder_category.pkl")
+label_encoder_status = joblib.load("models/label_encoder_status.pkl")
+label_encoder_recommendation = joblib.load("models/label_encoder_recommendation.pkl")
 
 # Input example
 input_data = {

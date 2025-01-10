@@ -9,6 +9,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 from imblearn.over_sampling import SMOTE
 import joblib
+import os
+
+model_directory = "models"
 
 # Step 1: Dataset
 data = {
@@ -139,10 +142,10 @@ cv_scores = cross_val_score(best_model, X_resampled, y_resampled, cv=5, scoring=
 print(f"K-Fold Cross Validation Accuracy: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
 
 # Step 11: Save the Model and Preprocessing Tools
-joblib.dump(best_model, "inventory_recommender.pkl")
-joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
-joblib.dump(label_encoder_category, "label_encoder_category.pkl")
-joblib.dump(label_encoder_status, "label_encoder_status.pkl")
-joblib.dump(label_encoder_recommendation, "label_encoder_recommendation.pkl")
+joblib.dump(best_model, os.path.join(model_directory, "inventory_recommender.pkl"))
+joblib.dump(vectorizer, os.path.join(model_directory, "tfidf_vectorizer.pkl"))
+joblib.dump(label_encoder_category, os.path.join(model_directory, "label_encoder_category.pkl"))
+joblib.dump(label_encoder_status, os.path.join(model_directory, "label_encoder_status.pkl"))
+joblib.dump(label_encoder_recommendation, os.path.join(model_directory, "label_encoder_recommendation.pkl"))
 
 print("Model, vectorizer, and label encoders saved.")
